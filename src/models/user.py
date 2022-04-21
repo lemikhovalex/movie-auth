@@ -20,3 +20,21 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.login}>"
+
+
+class UserData(db.Model):
+    __tablename__ = "user_data"
+    user_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("users.id"),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    first_name = db.Column(db.String, nullable=True)
+    second_name = db.Column(db.String, nullable=True)
+    email = db.Column(db.String, nullable=True)
+
+    def __repr__(self):
+        return f"<User data {self.first_name}, {self.second_name}>"
