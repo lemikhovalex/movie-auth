@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from config.db import PG_DB_NAME, PG_PASSWORD, PG_USER_NAME
+from config.db import PG_DB_NAME, PG_HOST, PG_PASSWORD, PG_USER_NAME
 
 db = SQLAlchemy()
 
@@ -13,6 +13,6 @@ def init_db(app: Flask):
         user=PG_USER_NAME,
         pasword=PG_PASSWORD,
         db_name=PG_DB_NAME,
-        host="db",
+        host=PG_HOST,
     )
     db.init_app(app)
