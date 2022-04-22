@@ -1,8 +1,14 @@
+import json
+
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
 from api.v1.auth.tokens import get_access_jwt, get_refresh_jwt
 from api.v1.crypto import cypher_password
+from config.db import REFRESH_TOKEN_EXP
+from db.pg import db
+from db.redis import ref_tok
+from models.sessions import Session
 from models.user import UserCredentials
 from schemas.user import login_schema
 
@@ -23,9 +29,29 @@ def login():
     true_password = user.password
 
     if true_password == cypher_password(login_data["password"]):
+        # write login info to relation db
+        agent = "agent"
+        session_start = Session(user_id=user.id, agent=agent)
+        db.session.add(session_start)
+        db.session.commit()
+        refresh_token = get_access_jwt("b")
+        access_token = get_refresh_jwt("a")
+        # add this refresh token to redis
+        ref_tok.setex(
+            json.dumps(
+                {
+                    "user_id": str(user.id),
+                    "agent": agent,
+                    "refresh_token": refresh_token,
+                }
+            ),
+            REFRESH_TOKEN_EXP,
+            "",
+        )
+
         return {
-            "access_token": get_access_jwt("a"),
-            "refresh_token": get_refresh_jwt("b"),
+            "access_token": access_token,
+            "refresh_token": refresh_token,
         }, 200
     else:
-        raise KeyError()
+        return "wrong password", 403
