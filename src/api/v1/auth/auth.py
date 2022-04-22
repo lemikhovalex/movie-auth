@@ -64,7 +64,7 @@ def login():
 
 
 @module_auth_bp.route("/check", methods=["POST"])
-def check() -> (dict, int):
+def check() -> (dict, list, int):
     access_token = request.headers.get("Authorization") or ""
     agent = request.headers.get("User-Agent")
     new_token = access_token
@@ -81,7 +81,7 @@ def check() -> (dict, int):
 
     if UPD_PAYLOAD.check(user_id=user_id, agent=agent):
         ACCESS_ROVEKED.add(access_token)
-        new_token = get_access_jwt(user_id)
+        new_token = get_access_jwt(str(user_id))
         UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
     return {"new_access_token": new_token, "roles": []}, 204
 
