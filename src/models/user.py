@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from db.pg import db
 
 
-class User(db.Model):
+class UserCredentials(db.Model):
     __tablename__ = "users"
 
     id = db.Column(

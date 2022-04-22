@@ -2,7 +2,7 @@ from app import app
 from db.pg import db
 from models.roles import UsersRoles
 from models.sessions import Session
-from models.user import User, UserData
+from models.user import UserCredentials, UserData
 
 # create sql alchemy
 app.app_context().push()
@@ -10,14 +10,14 @@ db.create_all()
 db.session.commit()
 
 # create admin
-admin = User(login="admin", password="password")
+admin = UserCredentials(login="admin", password="password")
 db.session.add(admin)
 
 
 # give him admin rights
 
-User.query.all()
-admin = User.query.filter_by(login="admin").first()
+UserCredentials.query.all()
+admin = UserCredentials.query.filter_by(login="admin").first()
 admin_u_id = admin.id
 
 # set some admin data
