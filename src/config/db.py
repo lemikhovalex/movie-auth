@@ -8,3 +8,6 @@ PG_HOST = os.getenv("POSTGRES_HOST", "db")
 
 REDIS_HOST = os.getenv("POSTGRES_HOST", "redis")
 REDIS_PORT = os.getenv("POSTGRES_PORT", 6379)
+
+ACCESS_TOKEN_EXP = 60 * 60
+REFRESH_TOKEN_EXP = 60 * 60 * 24 * 3
