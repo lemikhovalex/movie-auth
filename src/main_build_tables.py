@@ -1,3 +1,4 @@
+from api.v1.crypto import cypher_password
 from app import app
 from db.pg import db
 from models.roles import UsersRoles
@@ -10,7 +11,7 @@ db.create_all()
 db.session.commit()
 
 # create admin
-admin = UserCredentials(login="admin", password="password")
+admin = UserCredentials(login="admin", password=cypher_password("password"))
 db.session.add(admin)
 
 
