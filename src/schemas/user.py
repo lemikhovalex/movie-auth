@@ -1,7 +1,6 @@
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from marshmallow_sqlalchemy.fields import Nested
 
-from app import ma
 from models.user import UserCredentials, UserData
 
 
@@ -10,9 +9,9 @@ class UserCredentialsSch(SQLAlchemyAutoSchema):
         model = UserCredentials
         include_relationships = True
 
-    id = ma.auto_field()
-    login = ma.auto_field()
-    password = ma.auto_field()
+    id = auto_field()
+    login = auto_field()
+    password = auto_field()
 
 
 class UserDataSch(SQLAlchemyAutoSchema):
@@ -20,9 +19,9 @@ class UserDataSch(SQLAlchemyAutoSchema):
         model = UserData
         include_relationships = True
 
-    user_id = ma.auto_field()
-    first_name = ma.auto_field()
-    second_name = ma.auto_field()
+    user_id = auto_field()
+    first_name = auto_field()
+    second_name = auto_field()
 
 
 class RegisterSchema(SQLAlchemyAutoSchema):
@@ -39,3 +38,4 @@ class RegisterSchema(SQLAlchemyAutoSchema):
 
 
 register_schema = RegisterSchema()
+login_schema = UserCredentialsSch(exclude=("id",))
