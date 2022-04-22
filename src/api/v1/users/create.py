@@ -42,9 +42,3 @@ def create():
 
     data = {"user_id": new_user_id}
     return jsonify(data), 201
-
-
-@create_bp.route("", methods=["GET"])
-def get():
-    print("\n\nin route\n\n", flush=True)
-    return "get user"
