@@ -21,9 +21,7 @@ admin = UserCredentials.query.filter_by(login="admin").first()
 admin_u_id = admin.id
 
 # set some admin data
-u_data = UserData(
-    user_id=admin_u_id, first_name="A", second_name="Dmin", email="a@dm.in"
-)
+u_data = UserData(user_id=admin_u_id, first_name="A", second_name="Dmin")
 db.session.add(u_data)
 
 # give him role
