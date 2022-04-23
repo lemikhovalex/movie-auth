@@ -2,13 +2,12 @@ import asyncio
 import os
 import sys
 from dataclasses import dataclass
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 import aiohttp
 import aiopg
 import pytest
 import pytest_asyncio
-from multidict import CIMultiDictProxy
 
 from .settings import Settings
 
@@ -45,17 +44,47 @@ async def pg_connection() -> AsyncGenerator[aiopg.connection.Connection, None]:
                 await cur.execute("TRUNCATE users_roles CASCADE;")
 
 
-@dataclass
-class HTTPResponse:
-    body: dict
-    headers: CIMultiDictProxy[str]
-    status: int
-
-
 @pytest_asyncio.fixture(scope="session")
-async def session(pg_connection):  # use es_client arg to call index creation fixture
+async def session(pg_connection):
     session = aiohttp.ClientSession(headers={"Cache-Control": "no-store"})
 
     yield session
 
     await session.close()
+
+
+@dataclass
+class HTTPResponse:
+    body: dict
+    status: int
+
+
+@pytest_asyncio.fixture(scope="session")
+def make_post_request(session):
+    """Post request maker"""
+
+    async def inner(
+        method: str, json: Optional[dict] = None, headers: Optional[dict] = None
+    ) -> HTTPResponse:
+        url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/{method.lstrip('/')}"  # noqa: E501
+        async with session.post(url, json=json, headers=headers) as response:
+            try:
+                body = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                body = await response.text()
+            return HTTPResponse(
+                body=body,
+                status=response.status,
+            )
+
+    return inner
+
+
+@pytest_asyncio.fixture(scope="session")
+async def access_token(make_post_request):
+    response = await make_post_request(
+        "auth/login",
+        json={"login": "test1", "password": "test1"},
+    )
+
+    yield response.body["access_token"]
