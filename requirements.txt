@@ -6,3 +6,4 @@ flask_sqlalchemy==2.5.1
 marshmallow-sqlalchemy==0.28.0
 redis==4.2.2
 pyjwt==2.3.0
+requests==2.27.1
