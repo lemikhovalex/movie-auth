@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from http import HTTPStatus
 
 import aiohttp
 import pytest
@@ -31,7 +32,7 @@ async def test_login_logout_check(session: aiohttp.ClientSession):
             headers=response.headers,
             status=response.status,
         )
-        assert resp.status == 201
+        assert response.status == HTTPStatus.CREATED
 
     # login
     url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/auth/login"  # noqa: E501
@@ -42,7 +43,7 @@ async def test_login_logout_check(session: aiohttp.ClientSession):
             headers=response.headers,
             status=response.status,
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         auth_token = resp.body["access_token"]
 
     # check access
@@ -53,7 +54,7 @@ async def test_login_logout_check(session: aiohttp.ClientSession):
             headers=response.headers,
             status=response.status,
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
     # log out
     url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/auth/logout"  # noqa: E501
@@ -63,9 +64,9 @@ async def test_login_logout_check(session: aiohttp.ClientSession):
             headers=response.headers,
             status=response.status,
         )
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
     # check access
     url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/auth/check"  # noqa: E501
     async with session.post(url, headers={"Authorization": auth_token}) as response:
-        assert response.status == 403
+        assert response.status == HTTPStatus.FORBIDDEN
