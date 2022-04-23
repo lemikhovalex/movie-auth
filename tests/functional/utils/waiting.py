@@ -4,10 +4,10 @@ import logging
 import aiopg
 from aioredis import Redis
 from psycopg2 import OperationalError
-from settings import TestSettings
+from settings import Settings
 
 logger = logging.getLogger(__name__)
-SETTINGS = TestSettings()
+SETTINGS = Settings()
 
 
 async def wait_for_pg():

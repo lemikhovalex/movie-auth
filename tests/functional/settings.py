@@ -1,7 +1,7 @@
 from pydantic import BaseSettings, Field
 
 
-class TestSettings(BaseSettings):
+class Settings(BaseSettings):
     pg_host: str = Field("db", env="POSTGRES_DB")
     pg_user: str = Field("app", env="POSTGRES_USER")
     pg_password: str = Field("app", env="POSTGRES_PASSWORD")

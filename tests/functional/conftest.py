@@ -10,11 +10,11 @@ import pytest
 import pytest_asyncio
 from multidict import CIMultiDictProxy
 
-from .settings import TestSettings
+from .settings import Settings
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-SETTINGS = TestSettings()
+SETTINGS = Settings()
 
 
 @pytest.fixture(scope="session")

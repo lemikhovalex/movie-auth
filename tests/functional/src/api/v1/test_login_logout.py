@@ -3,11 +3,11 @@ from dataclasses import dataclass
 import aiohttp
 import pytest
 from multidict import CIMultiDictProxy
-from settings import TestSettings
+from settings import Settings
 
 # All test coroutines will be treated as marked with this decorator.
 pytestmark = pytest.mark.asyncio
-SETTINGS = TestSettings()
+SETTINGS = Settings()
 
 
 @dataclass
