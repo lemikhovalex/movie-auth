@@ -39,13 +39,9 @@ async def pg_connection() -> AsyncGenerator[aiopg.connection.Connection, None]:
 
             async with conn.cursor() as cur:
                 await cur.execute("TRUNCATE users CASCADE;")
-                await asyncio.gather(
-                    [
-                        cur.execute("TRUNCATE user_data CASCADE;"),
-                        cur.execute("TRUNCATE sessions CASCADE;"),
-                        cur.execute("TRUNCATE users_roles CASCADE;"),
-                    ]
-                )
+                await cur.execute("TRUNCATE user_data CASCADE;")
+                await cur.execute("TRUNCATE sessions CASCADE;")
+                await cur.execute("TRUNCATE users_roles CASCADE;")
 
 
 @dataclass
