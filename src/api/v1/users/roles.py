@@ -8,7 +8,7 @@ roles_bp = Blueprint("roles", __name__, url_prefix="")
 
 
 @roles_bp.route("/<user_id>/roles", methods=["GET"])
-def get_roles(user_id: str):
+def get_roles(user_id: str) -> (str, int):
     user_id = uuid.UUID(user_id)
     roles = UsersRoles.query.filter_by(user_id=user_id).all()
     if len(roles) > 0:

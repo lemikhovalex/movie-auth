@@ -5,8 +5,7 @@ from marshmallow import ValidationError
 
 from api.v1.auth.tokens import (
     check_validity_and_payload,
-    get_access_jwt,
-    get_refresh_jwt,
+    get_access_and_refresh_jwt,
 )
 from api.v1.crypto import check_password
 from config.db import REFRESH_TOKEN_EXP
@@ -42,8 +41,9 @@ def login():
         session_start = Session(user_id=creds_from_storage.id, agent=agent)
         db.session.add(session_start)
         db.session.commit()
-        refresh_token = get_access_jwt(str(creds_from_storage.id))
-        access_token = get_refresh_jwt(str(creds_from_storage.id))
+        access_token, refresh_token = get_access_and_refresh_jwt(
+            user_id=creds_from_storage.id
+        )
         # add this refresh token to redis
         ref_tok.setex(
             json.dumps(
@@ -84,7 +84,7 @@ def check() -> (dict, list, int):
 
     if UPD_PAYLOAD.check(user_id=user_id, agent=agent):
         ACCESS_ROVEKED.add(access_token)
-        new_token = get_access_jwt(str(user_id))
+        new_token, _ = get_access_and_refresh_jwt(user_id)
         UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
     return {"new_access_token": new_token, "roles": []}, 204
 

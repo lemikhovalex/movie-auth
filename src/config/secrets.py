@@ -1,1 +1,1 @@
-SECRET_SIGNATURE = ""
+SECRET_SIGNATURE = "secret"

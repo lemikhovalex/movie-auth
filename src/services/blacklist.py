@@ -6,9 +6,8 @@ from datetime import datetime
 import redis
 
 from config.db import ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP
+from config.formatting import DATE_TIME_FROMAT
 from db.redis import log_out, revoked_access, upd_payload
-
-DATE_TIME_FROMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class BaseDeviceBlackList(ABC):
