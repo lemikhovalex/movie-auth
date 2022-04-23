@@ -30,4 +30,4 @@ class UsersRoles(db.Model):
     )
 
     def __repr__(self):
-        return f"<User {self.login}>"
+        return f"<User {self.user_id} has {self.role_id}>"
