@@ -16,7 +16,7 @@ class UserCredentials(db.Model):
         nullable=False,
     )
     login = db.Column(db.String, unique=True, nullable=False)
-    password = db.Column(db.String, nullable=False)
+    password = db.Column(db.LargeBinary, nullable=False)
 
     def __repr__(self):
         return f"<User {self.login}>"

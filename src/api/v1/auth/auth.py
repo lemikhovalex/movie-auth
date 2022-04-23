@@ -8,7 +8,7 @@ from api.v1.auth.tokens import (
     get_access_jwt,
     get_refresh_jwt,
 )
-from api.v1.crypto import cypher_password
+from api.v1.crypto import check_password
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
 from db.redis import ref_tok
@@ -30,30 +30,33 @@ def login():
         # Return a nice message if validation fails
         return jsonify(err.messages), 400
 
-    user = UserCredentials.query.filter_by(login=login_data["login"]).first()
-    true_password = user.password
+    creds_from_storage = UserCredentials.query.filter_by(
+        login=login_data["login"]
+    ).first()
 
-    if true_password == cypher_password(login_data["password"]):
+    if check_password(
+        password=login_data["password"], password_encoded=creds_from_storage.password
+    ):
         # write login info to relation db
         agent = request.headers.get("User-Agent")
-        session_start = Session(user_id=user.id, agent=agent)
+        session_start = Session(user_id=creds_from_storage.id, agent=agent)
         db.session.add(session_start)
         db.session.commit()
-        refresh_token = get_access_jwt(str(user.id))
-        access_token = get_refresh_jwt(str(user.id))
+        refresh_token = get_access_jwt(str(creds_from_storage.id))
+        access_token = get_refresh_jwt(str(creds_from_storage.id))
         # add this refresh token to redis
         ref_tok.setex(
             json.dumps(
                 {
-                    "user_id": str(user.id),
+                    "user_id": str(creds_from_storage.id),
                     "agent": agent,
                 }
             ),
             REFRESH_TOKEN_EXP,
             refresh_token,
         )
-        LOG_OUT_ALL.process_update(user_id=user.id, agent=agent)
-        UPD_PAYLOAD.process_update(user_id=user.id, agent=agent)
+        LOG_OUT_ALL.process_update(user_id=creds_from_storage.id, agent=agent)
+        UPD_PAYLOAD.process_update(user_id=creds_from_storage.id, agent=agent)
 
         return {
             "access_token": access_token,
