@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
+from jwt.exceptions import DecodeError, InvalidSignatureError
 
 from api.v1.users.roles import get_roles
 from config.db import ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP
-from config.formatting import DATE_TIME_FROMAT
 from config.secrets import SECRET_SIGNATURE
 
 
@@ -21,18 +21,10 @@ def _get_access_jwt(
             return resp, code
 
     roles = resp.json
-    exp = datetime.strftime(
-        datetime.now() + timedelta(seconds=time_out),
-        DATE_TIME_FROMAT,
-    )
-    i_at = datetime.strftime(
-        datetime.now(),
-        DATE_TIME_FROMAT,
-    )
     payload = {
-        "exp": exp,
-        "iat": i_at,
-        "usr_id": str(user_id),
+        "exp": datetime.now() + timedelta(seconds=time_out),
+        "iat": datetime.now(),
+        "user_id": str(user_id),
         "roles": roles,
     }
     return jwt.encode(payload, SECRET_SIGNATURE, algorithm="HS256")
@@ -47,4 +39,13 @@ def get_access_and_refresh_jwt(user_id: uuid.UUID):
 
 
 def check_validity_and_payload(token) -> (bool, dict):
-    return (True, {"user_id": token})
+    is_ok = True
+    payload = {}
+    try:
+        payload = jwt.decode(token, SECRET_SIGNATURE, algorithms=["HS256"])
+    except (
+        DecodeError,
+        InvalidSignatureError,
+    ):
+        is_ok = False
+    return (is_ok, payload)

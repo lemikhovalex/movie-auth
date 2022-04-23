@@ -10,7 +10,7 @@ from api.v1.auth.tokens import (
 from api.v1.crypto import check_password
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
-from db.redis import ref_tok
+from db.redis import ref_tok, revoked_access
 from models.sessions import Session
 from models.user import UserCredentials
 from schemas.user import login_schema
@@ -73,29 +73,31 @@ def check() -> (dict, list, int):
     new_token = access_token
 
     is_valid, payload = check_validity_and_payload(access_token)
+    if not is_valid:
+        return "go log in", 403
     user_id = payload["user_id"]
-
-    if ACCESS_ROVEKED.check(access_token):
+    print(revoked_access.get(access_token))
+    if not ACCESS_ROVEKED.is_ok(access_token):
         return ("revoked", 403)
 
-    if LOG_OUT_ALL.check(user_id=user_id, agent=agent):
+    if not LOG_OUT_ALL.is_ok(user_id=user_id, agent=agent):
         ACCESS_ROVEKED.add(access_token)
         return ("requested logout", 403)
 
-    if UPD_PAYLOAD.check(user_id=user_id, agent=agent):
+    if not UPD_PAYLOAD.is_ok(user_id=user_id, agent=agent):
         ACCESS_ROVEKED.add(access_token)
         new_token, _ = get_access_and_refresh_jwt(user_id)
         UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
-    return {"new_access_token": new_token, "roles": []}, 204
+    return jsonify({"new_access_token": new_token, "roles": payload["roles"]}), 200
 
 
 @module_auth_bp.route("/logout", methods=["POST"])
 def log_out():
     access_token = request.headers.get("Authorization") or ""
     _, code = check()
-    if code == 204:
+    if code == 200:
         ACCESS_ROVEKED.add(access_token)
 
-        return ("", 204)
+        return ("", 200)
     else:
         return ("", 403)
