@@ -70,7 +70,7 @@ def login():
 def check() -> (dict, list, int):
     access_token = request.headers.get("Authorization") or ""
     agent = request.headers.get("User-Agent")
-    new_token = access_token
+    new_token = None
 
     is_valid, payload = check_validity_and_payload(access_token)
     if not is_valid:
