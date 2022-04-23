@@ -32,7 +32,7 @@ async def test_login_logout_check(session: aiohttp.ClientSession):
             headers=response.headers,
             status=response.status,
         )
-        assert response.status == HTTPStatus.CREATED
+        assert resp.status == HTTPStatus.CREATED
 
     # login
     url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/auth/login"  # noqa: E501
