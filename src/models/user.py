@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from db.pg import db
 
 
-class User(db.Model):
+class UserCredentials(db.Model):
     __tablename__ = "users"
 
     id = db.Column(
@@ -34,7 +34,6 @@ class UserData(db.Model):
     )
     first_name = db.Column(db.String, nullable=True)
     second_name = db.Column(db.String, nullable=True)
-    email = db.Column(db.String, nullable=True)
 
     def __repr__(self):
         return f"<User data {self.first_name}, {self.second_name}>"

@@ -1,11 +1,14 @@
 from flask import Flask
 from flask_marshmallow import Marshmallow
 
-from api import api_bp
 from db.pg import init_db
 
 app = Flask(__name__)
-app.register_blueprint(api_bp)
+ma = Marshmallow(app)
 init_db(app)
 
-ma = Marshmallow(app)
+from api import (  # noqa E402; TODO create app and then import blueprint, relid on app
+    api_bp,
+)
+
+app.register_blueprint(api_bp)
