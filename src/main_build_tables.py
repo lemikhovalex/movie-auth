@@ -1,38 +1,43 @@
-from api.v1.crypto import cypher_password
-from app import app
-from db.pg import db
-from models.roles import UsersRoles
-from models.sessions import Session
-from models.user import UserCredentials, UserData
+import os
+
+import psycopg2
+import requests
+from psycopg2.extras import DictCursor
 
 # create sql alchemy
-app.app_context().push()
-db.create_all()
-db.session.commit()
+# app.app_context().push()
+print(os.environ.get("POSTGRES_DB"))
+with psycopg2.connect(
+    dbname=os.environ.get("POSTGRES_DB"),
+    user=os.environ.get("POSTGRES_USER"),
+    password=os.environ.get("POSTGRES_PASSWORD"),
+    host="db",
+    cursor_factory=DictCursor,
+) as pg_conn:
 
-# create admin
-admin = UserCredentials(login="admin", password=cypher_password("password"))
-db.session.add(admin)
+    # register user as request
+    response = requests.post(
+        "http://auth:5000/api/v1/users/",
+        json={
+            "credentials": {"login": "admin", "password": "admin"},
+            "user_data": {"first_name": "13", "second_name": "Est"},
+        },
+    )
+    admin_id = response.json()["user_id"]
 
+    # give him admin role
 
-# give him admin rights
-
-UserCredentials.query.all()
-admin = UserCredentials.query.filter_by(login="admin").first()
-admin_u_id = admin.id
-
-# set some admin data
-u_data = UserData(user_id=admin_u_id, first_name="A", second_name="Dmin")
-db.session.add(u_data)
-
-# give him role
-role = UsersRoles(
-    user_id=admin_u_id,
-    role_id=0,
-)
-db.session.add(role)
-
-# and add session
-ses = Session(user_id=admin_u_id, agent="device")
-db.session.add(ses)
-db.session.commit()
+    with pg_conn.cursor() as cursor:
+        query = "INSERT INTO users_roles  (user_id, role_id) VALUES (%s);"
+        try:
+            cursor.execute(
+                query,
+                [
+                    (
+                        "b14e4bac-3717-4682-b1e2-f34b42d49c97",
+                        0,
+                    ),
+                ],
+            )
+        except Exception as exc_insert:
+            print(str(exc_insert))
