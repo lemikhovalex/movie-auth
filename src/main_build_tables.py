@@ -17,7 +17,7 @@ with psycopg2.connect(
 
     # register user as request
     response = requests.post(
-        "http://auth:5000/api/v1/users/",
+        "http://auth:5000/api/v1/users",
         json={
             "credentials": {"login": "admin", "password": "admin"},
             "user_data": {"first_name": "13", "second_name": "Est"},
