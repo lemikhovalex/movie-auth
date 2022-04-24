@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from db.pg import db, init_db
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 ma = Marshmallow(app)
 init_db(app)
 

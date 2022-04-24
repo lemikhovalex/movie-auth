@@ -8,7 +8,7 @@ pytestmark = pytest.mark.asyncio
 
 async def test_user_create(make_post_request):
     response = await make_post_request(
-        "users/",
+        "users",
         json={
             "credentials": {"login": "test1", "password": "test1"},
             "user_data": {"first_name": "13", "second_name": "Est"},
