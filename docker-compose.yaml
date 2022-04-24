@@ -6,6 +6,7 @@ services:
       - GUNICORN_CMD_ARGS
       - POSTGRES_PASSWORD
       - POSTGRES_USER
+      - POSTGRES_DB
     networks:
       - internal
     depends_on:

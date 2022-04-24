@@ -6,9 +6,8 @@ from datetime import datetime
 import redis
 
 from config.db import ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP
+from config.formatting import DATE_TIME_FORMAT
 from db.redis import log_out, revoked_access, upd_payload
-
-DATE_TIME_FROMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class BaseDeviceBlackList(ABC):
@@ -21,7 +20,7 @@ class BaseDeviceBlackList(ABC):
         pass
 
     @abstractmethod
-    def check(self, **kwargs) -> bool:
+    def is_ok(self, **kwargs) -> bool:
         pass
 
 
@@ -35,36 +34,36 @@ class UserDeviceBlackList(BaseDeviceBlackList):
         self.id_storage.setex(
             str(user_id),
             REFRESH_TOKEN_EXP,
-            datetime.strftime(datetime.now(), DATE_TIME_FROMAT),
+            datetime.strftime(datetime.now(), DATE_TIME_FORMAT),
         )
 
     def process_update(self, user_id: uuid.UUID, agent: str):
-        if self.check(user_id, agent):
+        if self.is_ok(user_id, agent):
             self.device_storage.setex(
                 self._get_uid_agent_str(user_id, agent),
                 REFRESH_TOKEN_EXP,
-                datetime.strftime(datetime.now(), DATE_TIME_FROMAT),
+                datetime.strftime(datetime.now(), DATE_TIME_FORMAT),
             )
 
-    def check(self, user_id: uuid.UUID, agent: str) -> bool:
+    def is_ok(self, user_id: uuid.UUID, agent: str) -> bool:
         str_time = self.id_storage.get(str(user_id))
         if str_time is None:
-            return False
-        set_time = datetime.strptime(str_time, DATE_TIME_FROMAT)
+            return True  # no request to logout for this user
+        set_time = datetime.strptime(str_time, DATE_TIME_FORMAT)
 
         last_action = self.device_storage.get(
             self._get_uid_agent_str(user_id, agent),
         )
         if last_action is None:
-            return False
-        last_action = datetime.strptime(last_action, DATE_TIME_FROMAT)
+            return False  # no logins provided with request on log out
+        last_action = datetime.strptime(last_action, DATE_TIME_FORMAT)
 
         if last_action > set_time:
-            return True
+            return True  # logged in after request on logout
         return True
 
     def _get_uid_agent_str(self, user_id: uuid.UUID, agent: str):
-        return json.dumps({"user_id": user_id, agent: "agent"})
+        return json.dumps({"user_id": str(user_id), agent: "agent"})
 
 
 class RevokedAccessBlackList(BaseDeviceBlackList):
@@ -77,14 +76,14 @@ class RevokedAccessBlackList(BaseDeviceBlackList):
             self.token_storage.setex(
                 token,
                 ACCESS_TOKEN_EXP,
-                "",
+                "revoked",
             )
 
     def process_update(self, user_id: uuid.UUID, agent: str):
         pass
 
-    def check(self, token: str) -> bool:
-        return bool(self.token_storage.exists(token))
+    def is_ok(self, token: str) -> bool:
+        return not bool(self.token_storage.exists(token))
 
 
 LOG_OUT_ALL = UserDeviceBlackList(
@@ -95,4 +94,4 @@ UPD_PAYLOAD = UserDeviceBlackList(
     id_storage=upd_payload.user_ids, device_storage=upd_payload.user_agents
 )
 
-ACCESS_ROVEKED = RevokedAccessBlackList(token_storage=revoked_access)
+ACCESS_REVOKED = RevokedAccessBlackList(token_storage=revoked_access)
