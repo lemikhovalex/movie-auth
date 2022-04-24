@@ -14,7 +14,7 @@ from db.redis import ref_tok, revoked_access
 from models.sessions import Session
 from models.user import UserCredentials
 from schemas.user import login_schema
-from services.blacklist import ACCESS_ROVEKED, LOG_OUT_ALL, UPD_PAYLOAD
+from services.blacklist import ACCESS_REVOKED, LOG_OUT_ALL, UPD_PAYLOAD
 
 module_auth_bp = Blueprint("login", __name__, url_prefix="")
 
@@ -77,15 +77,15 @@ def check() -> (dict, list, int):
         return "go log in", 403
     user_id = payload["user_id"]
     print(revoked_access.get(access_token))
-    if not ACCESS_ROVEKED.is_ok(access_token):
+    if not ACCESS_REVOKED.is_ok(access_token):
         return ("revoked", 403)
 
     if not LOG_OUT_ALL.is_ok(user_id=user_id, agent=agent):
-        ACCESS_ROVEKED.add(access_token)
+        ACCESS_REVOKED.add(access_token)
         return ("requested logout", 403)
 
     if not UPD_PAYLOAD.is_ok(user_id=user_id, agent=agent):
-        ACCESS_ROVEKED.add(access_token)
+        ACCESS_REVOKED.add(access_token)
         new_token, _ = get_access_and_refresh_jwt(user_id)
         UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
     return jsonify({"new_access_token": new_token, "roles": payload["roles"]}), 200
@@ -96,7 +96,7 @@ def log_out():
     access_token = request.headers.get("Authorization") or ""
     _, code = check()
     if code == 200:
-        ACCESS_ROVEKED.add(access_token)
+        ACCESS_REVOKED.add(access_token)
 
         return ("", 200)
     else:

@@ -6,7 +6,7 @@ from datetime import datetime
 import redis
 
 from config.db import ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP
-from config.formatting import DATE_TIME_FROMAT
+from config.formatting import DATE_TIME_FORMAT
 from db.redis import log_out, revoked_access, upd_payload
 
 
@@ -34,7 +34,7 @@ class UserDeviceBlackList(BaseDeviceBlackList):
         self.id_storage.setex(
             str(user_id),
             REFRESH_TOKEN_EXP,
-            datetime.strftime(datetime.now(), DATE_TIME_FROMAT),
+            datetime.strftime(datetime.now(), DATE_TIME_FORMAT),
         )
 
     def process_update(self, user_id: uuid.UUID, agent: str):
@@ -42,21 +42,21 @@ class UserDeviceBlackList(BaseDeviceBlackList):
             self.device_storage.setex(
                 self._get_uid_agent_str(user_id, agent),
                 REFRESH_TOKEN_EXP,
-                datetime.strftime(datetime.now(), DATE_TIME_FROMAT),
+                datetime.strftime(datetime.now(), DATE_TIME_FORMAT),
             )
 
     def is_ok(self, user_id: uuid.UUID, agent: str) -> bool:
         str_time = self.id_storage.get(str(user_id))
         if str_time is None:
             return True  # no request to logout for this user
-        set_time = datetime.strptime(str_time, DATE_TIME_FROMAT)
+        set_time = datetime.strptime(str_time, DATE_TIME_FORMAT)
 
         last_action = self.device_storage.get(
             self._get_uid_agent_str(user_id, agent),
         )
         if last_action is None:
             return False  # no logins provided with request on log out
-        last_action = datetime.strptime(last_action, DATE_TIME_FROMAT)
+        last_action = datetime.strptime(last_action, DATE_TIME_FORMAT)
 
         if last_action > set_time:
             return True  # logged in after request on logout
@@ -94,4 +94,4 @@ UPD_PAYLOAD = UserDeviceBlackList(
     id_storage=upd_payload.user_ids, device_storage=upd_payload.user_agents
 )
 
-ACCESS_ROVEKED = RevokedAccessBlackList(token_storage=revoked_access)
+ACCESS_REVOKED = RevokedAccessBlackList(token_storage=revoked_access)
