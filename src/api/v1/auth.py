@@ -3,11 +3,6 @@ import json
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
-from api.v1.crypto import check_password
-from api.v1.tokens import (
-    check_validity_and_payload,
-    get_access_and_refresh_jwt,
-)
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
 from db.redis import ref_tok, revoked_access
@@ -15,6 +10,8 @@ from models.sessions import Session
 from models.user import UserCredentials
 from schemas.user import login_schema
 from services.blacklist import ACCESS_REVOKED, LOG_OUT_ALL, UPD_PAYLOAD
+from utils.crypto import check_password
+from utils.tokens import check_validity_and_payload, get_access_and_refresh_jwt
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 

@@ -4,11 +4,11 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from api.v1.crypto import cypher_password
 from db.pg import db
 from models.roles import UsersRoles
 from models.user import UserCredentials, UserData
 from schemas.user import register_schema
+from utils.crypto import cypher_password
 
 bp = Blueprint("users", __name__, url_prefix="/users")
 
