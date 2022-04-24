@@ -4,16 +4,16 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from api.v1.crypto import cypher_password
 from db.pg import db
 from models.roles import UsersRoles
 from models.user import UserCredentials, UserData
 from schemas.user import register_schema
+from utils.crypto import cypher_password
 
-create_bp = Blueprint("create", __name__, url_prefix="")
+bp = Blueprint("users", __name__, url_prefix="/users")
 
 
-@create_bp.route("", methods=["POST"])
+@bp.route("", methods=["POST"])
 def create():
     request_data = request.json
     try:
@@ -42,3 +42,13 @@ def create():
 
     data = {"user_id": new_user_id}
     return jsonify(data), 201
+
+
+@bp.route("/<user_id>/roles", methods=["GET"])
+def get_roles(user_id: str) -> (str, int):
+    user_id = uuid.UUID(user_id)
+    roles = UsersRoles.query.filter_by(user_id=user_id).all()
+    if len(roles) > 0:
+        return jsonify([r.role_id for r in roles]), 200
+    else:
+        return "", 404
