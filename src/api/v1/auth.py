@@ -3,11 +3,11 @@ import json
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
-from api.v1.auth.tokens import (
+from api.v1.crypto import check_password
+from api.v1.tokens import (
     check_validity_and_payload,
     get_access_and_refresh_jwt,
 )
-from api.v1.crypto import check_password
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
 from db.redis import ref_tok, revoked_access
@@ -16,10 +16,10 @@ from models.user import UserCredentials
 from schemas.user import login_schema
 from services.blacklist import ACCESS_REVOKED, LOG_OUT_ALL, UPD_PAYLOAD
 
-module_auth_bp = Blueprint("login", __name__, url_prefix="")
+bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@module_auth_bp.route("/login", methods=["POST"])
+@bp.route("/login", methods=["POST"])
 def login():
     request_data = request.json
     try:
@@ -66,7 +66,7 @@ def login():
         return "wrong password", 403
 
 
-@module_auth_bp.route("/check", methods=["POST"])
+@bp.route("/check", methods=["POST"])
 def check() -> (dict, list, int):
     access_token = request.headers.get("Authorization") or ""
     agent = request.headers.get("User-Agent")
@@ -91,7 +91,7 @@ def check() -> (dict, list, int):
     return jsonify({"new_access_token": new_token, "roles": payload["roles"]}), 200
 
 
-@module_auth_bp.route("/logout", methods=["POST"])
+@bp.route("/logout", methods=["POST"])
 def log_out():
     access_token = request.headers.get("Authorization") or ""
     _, code = check()

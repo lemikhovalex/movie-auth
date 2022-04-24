@@ -5,7 +5,7 @@ from typing import Optional
 import jwt
 from jwt.exceptions import DecodeError, InvalidSignatureError
 
-from api.v1.users.roles import get_roles
+from api.v1.users import get_roles
 from config.db import ACCESS_TOKEN_EXP, REFRESH_TOKEN_EXP
 from config.secrets import SECRET_SIGNATURE
 
