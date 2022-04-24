@@ -7,3 +7,4 @@ marshmallow-sqlalchemy==0.28.0
 redis==4.2.2
 pyjwt==2.3.0
 requests==2.27.1
+flasgger==0.9.5
