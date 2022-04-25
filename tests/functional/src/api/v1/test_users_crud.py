@@ -13,11 +13,11 @@ USER = {
 NEW_USER_DATA = {"first_name": "14", "second_name": "TEst"}
 
 
-async def test_user_create(make_post_request):
+async def test_user_create(make_request):
     global USER_ID
     global USER
 
-    response = await make_post_request(
+    response = await make_request("post")(
         "users",
         json=USER,
     )
@@ -27,12 +27,12 @@ async def test_user_create(make_post_request):
     assert response.status == HTTPStatus.CREATED
 
 
-async def test_user_data(make_get_request, access_token):
+async def test_user_data(make_request, access_token):
 
     global USER_ID
     global USER
 
-    response = await make_get_request(
+    response = await make_request("get")(
         f"users/{USER_ID}",
         headers={"Authorization": access_token},
     )
@@ -41,12 +41,12 @@ async def test_user_data(make_get_request, access_token):
     assert response.status == HTTPStatus.OK
 
 
-async def test_update_user_data(make_put_request, access_token):
+async def test_update_user_data(make_request, access_token):
 
     global USER_ID
     global NEW_USER_DATA
 
-    response = await make_put_request(
+    response = await make_request("put")(
         f"users/{USER_ID}",
         json=NEW_USER_DATA,
         headers={"Authorization": access_token},
@@ -55,14 +55,12 @@ async def test_update_user_data(make_put_request, access_token):
     assert response.status == HTTPStatus.OK
 
 
-async def test_user_data_after_upd(
-    make_get_request,
-):
+async def test_user_data_after_upd(make_request):
 
     global USER_ID
     global NEW_USER_DATA
 
-    response = await make_get_request(
+    response = await make_request("get")(
         f"users/{USER_ID}",
     )
 
@@ -70,11 +68,11 @@ async def test_user_data_after_upd(
     assert response.status == HTTPStatus.OK
 
 
-async def test_user_delete(make_delete_request, access_token):
+async def test_user_delete(make_request, access_token):
 
     global USER_ID
 
-    response = await make_delete_request(
+    response = await make_request("delete")(
         f"users/{USER_ID}",
         headers={"Authorization": access_token},
     )
@@ -82,20 +80,18 @@ async def test_user_delete(make_delete_request, access_token):
     assert response.status == HTTPStatus.OK
 
 
-async def test_user_data_after_del(
-    make_get_request,
-):
+async def test_user_data_after_del(make_request):
 
     global USER_ID
 
-    response = await make_get_request(
+    response = await make_request("get")(
         f"users/{USER_ID}",
     )
 
     assert response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_login_after_del(make_post_request):
-    response = await make_post_request("auth/login", json=USER["credentials"])
+async def test_login_after_del(make_request):
+    response = await make_request("post")("auth/login", json=USER["credentials"])
 
     assert response.status == HTTPStatus.NOT_FOUND
