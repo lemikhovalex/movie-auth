@@ -140,3 +140,24 @@ def change_password():
         db.session.commit()
         logout_all()
         return "", 200
+
+
+@bp.route("/change-login", methods=["POST"])
+def change_login():
+    new_login = request.json["login"]
+
+    check_response, status = check()
+    if status != 200:
+        return check_response, status
+
+    payload = json.loads(check_response)["payload"]
+
+    q = UserCredentials.query.filter_by(id=payload["user_id"])
+    creds_from_storage = q.first()
+    if creds_from_storage is None:
+        return "invalid login", 404
+    else:
+        q.update({"login": new_login})
+        db.session.commit()
+        # logout_all()
+        return "", 200
