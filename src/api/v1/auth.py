@@ -3,6 +3,7 @@ import json
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
+from api.v1.users import get_roles
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
 from db.redis import ref_tok
@@ -44,7 +45,7 @@ def login():
         db.session.add(session_start)
         db.session.commit()
         access_token, refresh_token = get_access_and_refresh_jwt(
-            user_id=creds_from_storage.id
+            user_id=creds_from_storage.id, roles_getter=get_roles
         )
         # add this refresh token to redis
         ref_tok.setex(
@@ -87,7 +88,7 @@ def check() -> (dict, list, int):
 
     if not UPD_PAYLOAD.is_ok(payload=black_list_info):
         ACCESS_REVOKED.add(access_token)
-        new_token, _ = get_access_and_refresh_jwt(user_id)
+        new_token, _ = get_access_and_refresh_jwt(user_id, get_roles)
         UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
     return jsonify({"new_access_token": new_token, "roles": payload["roles"]}), 200
 
