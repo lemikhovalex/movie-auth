@@ -3,15 +3,19 @@ import json
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 
-from api.v1.users import get_roles
-from api.v1.utils import check as check_utils
+from api.v1.user_roles import get_roles
 from config.db import REFRESH_TOKEN_EXP
 from db.pg import db
 from db.redis import ref_tok
 from models.sessions import Session
 from models.user import UserCredentials
 from schemas.user import login_schema
-from services.blacklist import ACCESS_REVOKED, LOG_OUT_ALL, AccessForBlackList
+from services.blacklist import (
+    ACCESS_REVOKED,
+    LOG_OUT_ALL,
+    UPD_PAYLOAD,
+    AccessForBlackList,
+)
 from utils.crypto import check_password
 from utils.tokens import check_validity_and_payload, get_access_and_refresh_jwt
 
@@ -68,7 +72,27 @@ def login():
 
 @bp.route("/check", methods=["POST"])
 def check() -> (dict, list, int):
-    return check_utils(request=request, roles_getter=get_roles)
+    access_token = request.headers.get("Authorization") or ""
+    agent = request.headers.get("User-Agent")
+
+    is_valid, payload = check_validity_and_payload(access_token)
+    black_list_info = AccessForBlackList.from_dict(**payload)
+    if not is_valid:
+        return "go log in", 403
+    user_id = payload["user_id"]
+    if not ACCESS_REVOKED.is_ok(access_token):
+        print("revoked")
+        return ("revoked", 403)
+
+    if not LOG_OUT_ALL.is_ok(payload=black_list_info):
+        ACCESS_REVOKED.add(token=access_token)
+        return ("requested logout", 403)
+
+    if not UPD_PAYLOAD.is_ok(payload=black_list_info):
+        UPD_PAYLOAD.process_update(user_id=user_id, agent=agent)
+        return ("requested payload upd", 403)
+
+    return json.dumps({"payload": payload}), 200
 
 
 @bp.route("/logout", methods=["POST"])

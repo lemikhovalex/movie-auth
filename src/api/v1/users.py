@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from api.v1.utils import check
+from api.v1.auth import check
 from db.pg import db
 from models.roles import UsersRoles
 from models.sessions import Session
@@ -66,7 +66,7 @@ def update(user_id):
         # Return a nice message if validation fails
         return jsonify(err.messages), 400
 
-    check_response, status = check(request=request, roles_getter=get_roles)
+    check_response, status = check()
 
     if status != 200:
         return check_response, status
@@ -82,7 +82,7 @@ def update(user_id):
 
 @bp.route("/<user_id>", methods=["DELETE"])
 def delete(user_id):
-    check_response, status = check(request=request, roles_getter=get_roles)
+    check_response, status = check()
 
     if status != 200:
         return check_response, status
@@ -95,13 +95,3 @@ def delete(user_id):
         UserCredentials.query.filter_by(id=user_id).delete()
         db.session.commit()
         return "", 200
-
-
-@bp.route("/<user_id>/roles", methods=["GET"])
-def get_roles(user_id: str) -> (str, int):
-    user_id = uuid.UUID(user_id)
-    roles = UsersRoles.query.filter_by(user_id=user_id).all()
-    if len(roles) > 0:
-        return jsonify([r.role_id for r in roles]), 200
-    else:
-        return "", 404
