@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Optional
 
 import aiohttp
 import aiopg
+import aioredis
 import pytest
 import pytest_asyncio
 
@@ -23,7 +24,7 @@ def event_loop():
     loop.close()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="module")
 async def pg_connection() -> AsyncGenerator[aiopg.connection.Connection, None]:
     os.system("python3 main_build_tables.py")
     dsn = "dbname={dbname} user={user} password={password} host={host}".format(
@@ -44,8 +45,17 @@ async def pg_connection() -> AsyncGenerator[aiopg.connection.Connection, None]:
                 await cur.execute("TRUNCATE users_roles CASCADE;")
 
 
-@pytest_asyncio.fixture(scope="session")
-async def session(pg_connection):
+@pytest_asyncio.fixture(scope="module")
+async def redis() -> AsyncGenerator[aiopg.connection.Connection, None]:
+    redis_table = aioredis.Redis(host=SETTINGS.redis_host, port=SETTINGS.redis_port)
+
+    yield None
+
+    await redis_table.flushall()
+
+
+@pytest_asyncio.fixture(scope="module")
+async def session(pg_connection, redis):
     session = aiohttp.ClientSession(headers={"Cache-Control": "no-store"})
 
     yield session
@@ -59,7 +69,7 @@ class HTTPResponse:
     status: int
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="module")
 def make_post_request(session):
     """Post request maker"""
 
@@ -80,11 +90,34 @@ def make_post_request(session):
     return inner
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="module")
 async def access_token(make_post_request):
     response = await make_post_request(
         "auth/login",
         json={"login": "test1", "password": "test1"},
+        headers={"User-Agent": "agent_1"},
+    )
+
+    yield response.body["access_token"]
+
+
+@pytest_asyncio.fixture(scope="module")
+async def second_access_token(make_post_request):
+    response = await make_post_request(
+        "auth/login",
+        json={"login": "test1", "password": "test1"},
+        headers={"User-Agent": "agent_2"},
+    )
+
+    yield response.body["access_token"]
+
+
+@pytest_asyncio.fixture(scope="module")
+async def third_access_token(make_post_request):
+    response = await make_post_request(
+        "auth/login",
+        json={"login": "test1", "password": "test1"},
+        headers={"User-Agent": "agent_2"},
     )
 
     yield response.body["access_token"]

@@ -27,7 +27,11 @@ def _get_access_jwt(
         "user_id": str(user_id),
         "roles": roles,
     }
-    return jwt.encode(payload, SECRET_SIGNATURE, algorithm="HS256")
+    return jwt.encode(
+        payload,
+        SECRET_SIGNATURE,
+        algorithm="HS256",
+    )
 
 
 def _get_refresh_jwt(user_id):
