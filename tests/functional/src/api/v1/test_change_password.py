@@ -28,7 +28,7 @@ async def test_login(make_request):
     global FIRST_TOKEN
     response = await make_request("post")(
         "auth/login",
-        json={"login": "test1", "password": "test1"},
+        json={"login": "test1", "password": old_password},
     )
     FIRST_TOKEN = response.body["access_token"]
 
@@ -39,7 +39,7 @@ async def test_one_more_login(make_request):
     global SECOND_TOKEN
     response = await make_request("post")(
         "auth/login",
-        json={"login": "test1", "password": "test1"},
+        json={"login": "test1", "password": old_password},
     )
     SECOND_TOKEN = response.body["access_token"]
 
