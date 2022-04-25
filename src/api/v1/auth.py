@@ -16,7 +16,7 @@ from services.blacklist import (
     UPD_PAYLOAD,
     AccessForBlackList,
 )
-from utils.crypto import check_password
+from utils.crypto import check_password, cypher_password
 from utils.tokens import check_validity_and_payload, get_access_and_refresh_jwt
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -119,3 +119,24 @@ def logout_all():
         return ("", 200)
     else:
         return ("", 403)
+
+
+@bp.route("/change-password", methods=["POST"])
+def change_password():
+    new_password = request.json["password"]
+
+    check_response, status = check()
+    if status != 200:
+        return check_response, status
+
+    payload = json.loads(check_response)["payload"]
+
+    q = UserCredentials.query.filter_by(id=payload["user_id"])
+    creds_from_storage = q.first()
+    if creds_from_storage is None:
+        return "invalid login", 404
+    else:
+        q.update({"password": cypher_password(new_password)})
+        db.session.commit()
+        logout_all()
+        return "", 200
