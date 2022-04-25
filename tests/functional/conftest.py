@@ -91,6 +91,69 @@ def make_post_request(session):
 
 
 @pytest_asyncio.fixture(scope="module")
+def make_put_request(session):
+    """Post request maker"""
+
+    async def inner(
+        method: str, json: Optional[dict] = None, headers: Optional[dict] = None
+    ) -> HTTPResponse:
+        url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/{method.lstrip('/')}"  # noqa: E501
+        async with session.put(url, json=json, headers=headers) as response:
+            try:
+                body = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                body = await response.text()
+            return HTTPResponse(
+                body=body,
+                status=response.status,
+            )
+
+    return inner
+
+
+@pytest_asyncio.fixture(scope="module")
+def make_get_request(session):
+    """Post request maker"""
+
+    async def inner(
+        method: str, json: Optional[dict] = None, headers: Optional[dict] = None
+    ) -> HTTPResponse:
+        url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/{method.lstrip('/')}"  # noqa: E501
+        async with session.get(url, json=json, headers=headers) as response:
+            try:
+                body = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                body = await response.text()
+            return HTTPResponse(
+                body=body,
+                status=response.status,
+            )
+
+    return inner
+
+
+@pytest_asyncio.fixture(scope="module")
+def make_delete_request(session):
+    """Post request maker"""
+
+    async def inner(
+        method: str, json: Optional[dict] = None, headers: Optional[dict] = None
+    ) -> HTTPResponse:
+        url = f"http://{SETTINGS.api_host}:{SETTINGS.api_port}/api/v1/{method.lstrip('/')}"  # noqa: E501
+        async with session.delete(url, json=json, headers=headers) as response:
+            try:
+                body = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                body = await response.text()
+            return HTTPResponse(
+                body=body,
+                status=response.status,
+            )
+
+    return inner
+
+
+@pytest_asyncio.fixture(scope="module")
 async def access_token(make_post_request):
     response = await make_post_request(
         "auth/login",
