@@ -39,3 +39,4 @@ class RegisterSchema(SQLAlchemyAutoSchema):
 
 register_schema = RegisterSchema()
 login_schema = UserCredentialsSch(exclude=("id",))
+user_data_schema = UserDataSch(exclude=("user_id",))
